@@ -81,15 +81,27 @@ You need to tell the manager where your bots are located.
 
 ```js
 const BOTS = {
-  arb: {
-    name: '⚡ Arb Bot',
-    dir: '/home/ubuntu/base-arb-bot',    // ← Change to your path
+  arb_base: {
+    name: '🔵 Arb Bot (Base)',
+    dir: '/home/ubuntu/base-arb-bot',
     cmd: 'npm start',
     logFile: 'arb.log',
   },
-  liquidation: {
-    name: '💀 Liquidation Bot',
-    dir: '/home/ubuntu/aave-liquidation-bot',  // ← Change to your path
+  arb_arbitrum: {
+    name: '🟠 Arb Bot (Arbitrum)',
+    dir: '/home/ubuntu/arb-arb-bot',
+    cmd: 'npm start',
+    logFile: 'arb.log',
+  },
+  liq_base: {
+    name: '🔵 Liq Bot (Base)',
+    dir: '/home/ubuntu/aave-liquidation-bot',
+    cmd: 'npm start',
+    logFile: 'liquidation.log',
+  },
+  liq_arbitrum: {
+    name: '🟠 Liq Bot (Arbitrum)',
+    dir: '/home/ubuntu/arb-liquidation-bot',
     cmd: 'npm start',
     logFile: 'liquidation.log',
   },
