@@ -362,7 +362,17 @@ function getLogs(botId, lines = 10) {
     if (!fs.existsSync(logPath)) return `📝 No logs yet for ${bot.name}`;
 
     try {
-        const content = fs.readFileSync(logPath, 'utf8');
+        const stats = fs.statSync(logPath);
+        const size = stats.size;
+        
+        // Read up to 4KB (usually enough for 10-20 lines) to avoid loading huge files
+        const bufferSize = Math.min(size, Math.max(4096, lines * 200)); 
+        const fd = fs.openSync(logPath, 'r');
+        const buffer = Buffer.alloc(bufferSize);
+        fs.readSync(fd, buffer, 0, bufferSize, size - bufferSize);
+        fs.closeSync(fd);
+
+        const content = buffer.toString('utf8');
         const allLines = content.trim().split('\n');
         const lastLines = allLines.slice(-lines).join('\n');
         return `📝 <b>${bot.name} — Last ${lines} lines:</b>\n<pre>${lastLines}</pre>`;
