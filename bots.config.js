@@ -4,11 +4,13 @@
 //  To add a new bot, just add a new entry to this object.
 // ============================================================
 
+const path = require('path');
+
 const BOTS = {
     arb: {
         name: '⚡ Arb Bot (Base)',
         chain: 'base',
-        dir: '/home/ubuntu/base-arb-bot',
+        dir: path.resolve(__dirname, '../base-arb-bot'),
         cmd: 'npm start',
         logFile: 'arb.log',
         // Contract info for /withdraw command
@@ -23,7 +25,7 @@ const BOTS = {
     liquidation: {
         name: '💀 Liquidation Bot (Base)',
         chain: 'base',
-        dir: '/home/ubuntu/aave-liquidation-bot',
+        dir: path.resolve(__dirname, '../aave-liquidation-bot'),
         cmd: 'CHAIN=base npm start',
         logFile: 'liquidation_base.log',
         contractAddress: '',
@@ -37,7 +39,7 @@ const BOTS = {
     arb_arbitrum: {
         name: '⚡ Arb Bot (Arbitrum)',
         chain: 'arbitrum',
-        dir: '/home/ubuntu/arb-arb-bot',
+        dir: path.resolve(__dirname, '../arb-arb-bot'),
         cmd: 'CHAIN=arbitrum npm start',
         logFile: 'arb_arbitrum.log',
         contractAddress: '0x1d1D09a9f891B3E0C62f5C1A3a6dC6DA7E4FE197',
@@ -51,7 +53,7 @@ const BOTS = {
     liquidation_arbitrum: {
         name: '💀 Liquidation Bot (Arbitrum)',
         chain: 'arbitrum',
-        dir: '/home/ubuntu/arb-liquidation-bot',
+        dir: path.resolve(__dirname, '../arb-liquidation-bot'),
         cmd: 'CHAIN=arbitrum npm start',
         logFile: 'liquidation_arbitrum.log',
         contractAddress: '0x17AC291006F2a239aAB98ab503F32F43d537aCdF',
