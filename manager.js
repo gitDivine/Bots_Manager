@@ -374,7 +374,11 @@ function getLogs(botId, lines = 10) {
 
         const content = buffer.toString('utf8');
         const allLines = content.trim().split('\n');
-        const lastLines = allLines.slice(-lines).join('\n');
+        let lastLines = allLines.slice(-lines).join('\n');
+        
+        // Escape HTML to prevent Telegram from rejecting the message
+        lastLines = lastLines.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        
         return `📝 <b>${bot.name} — Last ${lines} lines:</b>\n<pre>${lastLines}</pre>`;
     } catch {
         return `❌ Could not read logs for ${bot.name}`;
