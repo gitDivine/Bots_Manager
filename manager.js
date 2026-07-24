@@ -379,9 +379,14 @@ function getLogs(botId, lines = 10) {
         // Escape HTML to prevent Telegram from rejecting the message
         lastLines = lastLines.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         
+        // Telegram message length limit is 4096. Truncate if necessary.
+        if (lastLines.length > 3500) {
+            lastLines = "..." + lastLines.substring(lastLines.length - 3500);
+        }
+        
         return `📝 <b>${bot.name} — Last ${lines} lines:</b>\n<pre>${lastLines}</pre>`;
-    } catch {
-        return `❌ Could not read logs for ${bot.name}`;
+    } catch (err) {
+        return `❌ Could not read logs for ${bot.name}: ${err.message}`;
     }
 }
 
