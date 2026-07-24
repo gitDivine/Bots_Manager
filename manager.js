@@ -655,13 +655,20 @@ async function handleCommand(text) {
     }
 }
 
-// Handle bulk operations
 async function handleBulk(action) {
     let msg = '';
     for (const id of Object.keys(BOTS)) {
-        if (action === 'start') msg += startBot(id) + '\n';
-        else if (action === 'stop') msg += killBot(id) + '\n';
-        else if (action === 'restart') msg += await restartBot(id) + '\n';
+        if (action === 'start') {
+            msg += startBot(id) + '\n';
+            await new Promise(r => setTimeout(r, 10000));
+        }
+        else if (action === 'stop') {
+            msg += killBot(id) + '\n';
+        }
+        else if (action === 'restart') {
+            msg += await restartBot(id) + '\n';
+            await new Promise(r => setTimeout(r, 10000));
+        }
     }
     return msg;
 }
@@ -855,6 +862,7 @@ async function main() {
         if (!manuallyKilled.has(id)) {
             const result = startBot(id);
             log.info(result);
+            await new Promise(r => setTimeout(r, 10000)); // Stagger startups by 10s to avoid RPC limits
         } else {
             log.info(`Skipping auto-start for ${BOTS[id].name} (manually stopped)`);
         }
