@@ -462,6 +462,29 @@ async function getWallet() {
             msg += `  💵 USDC: $${usdcBal}\n\n`;
         }
 
+        msg += `🏦 <b>Smart Contracts</b>\n`;
+        let foundContracts = false;
+        for (const [id, bot] of Object.entries(BOTS)) {
+            if (!bot.contractAddress) continue;
+            foundContracts = true;
+            const chain = bot.chain || 'base';
+            const config = CHAIN_CONFIG[chain];
+            const ethBal = await getSafeBalance(bot.contractAddress, chain);
+            
+            let usdcBal = '0.00';
+            try {
+                const urls = [config.rpc, ...config.fallbacks].filter(u => u && !u.includes('alchemy'));
+                const provider = new ethers.JsonRpcProvider(urls[0]);
+                const usdc = new ethers.Contract(config.usdc, USDC_ABI, provider);
+                const usdcRaw = await withTimeout(usdc.balanceOf(bot.contractAddress), 5000, 'USDC Timeout');
+                usdcBal = parseFloat(ethers.formatUnits(usdcRaw, 6)).toFixed(2);
+            } catch (err) { }
+            
+            msg += `<b>${bot.name}</b>\n  ♦ ETH: ${ethBal} | USDC: $${usdcBal}\n`;
+        }
+        
+        if (!foundContracts) msg += `<i>No contract addresses configured.</i>\n`;
+
         return msg;
     } catch (err) {
         return `❌ Wallet error: ${err.message}`;
