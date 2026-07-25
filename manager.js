@@ -590,6 +590,7 @@ function getMainMenu() {
             [
                 { text: '📝 Logs', callback_data: 'menu:logs' },
                 { text: '💸 Withdraw', callback_data: 'menu:withdraw' },
+                { text: '🧹 Sweep', callback_data: 'menu:sweep' },
             ],
             [
                 { text: '💓 Heartbeat', callback_data: 'menu:heartbeat' },
@@ -609,7 +610,8 @@ function getHelpText() {
         `/logs — Bot logs\n` +
         `/wallet — ETH + USDC balance\n` +
         `/heartbeat — Manual alive ping\n` +
-        `/withdraw — Withdraw profits\n\n` +
+        `/withdraw — Withdraw profits\n` +
+        `/sweep — Sweep profits to cold wallet\n\n` +
         `<b>Bot IDs:</b> ${Object.keys(BOTS).join(', ')}\n` +
         `<i>Or just tap the buttons!</i>`;
 }
@@ -763,8 +765,9 @@ async function pollTelegram() {
                             case 'start': response = { text: '\u25b6\ufe0f <b>Which bot to start?</b>', buttons: buildBotButtons('start') }; break;
                             case 'stop': response = { text: '\u23f9 <b>Which bot to stop?</b>', buttons: buildBotButtons('stop') }; break;
                             case 'restart': response = { text: '\ud83d\udd04 <b>Which bot to restart?</b>', buttons: buildBotButtons('restart') }; break;
-                            case 'logs': response = { text: '\ud83d\udcdd <b>Which bot\'s logs?</b>', buttons: buildBotButtons('logs', false) }; break;
-                            case 'withdraw': response = { text: '\ud83d\udcb8 <b>Withdraw from which bot?</b>', buttons: buildBotButtons('withdraw', false) }; break;
+                            case 'logs': response = { text: '\u1f4dd <b>Which bot\'s logs?</b>', buttons: buildBotButtons('logs', false) }; break;
+                            case 'withdraw': response = { text: '\u1f4b8 <b>Withdraw from which bot?</b>', buttons: buildBotButtons('withdraw', false) }; break;
+                            case 'sweep': response = await doSweep(); break;
                             default: response = getMainMenu();
                         }
                     } else if (parts[0] === 'dowithdraw' && parts.length === 3) {
