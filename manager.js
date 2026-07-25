@@ -529,6 +529,26 @@ async function doWithdraw(botId, tokenAddress) {
     }
 }
 
+// ── Consolidate ──────────────────────────────────────────────
+async function doSweep() {
+    try {
+        const botDir = BOTS['arb'].dir;
+        const cmd = 'npx ts-node src/consolidate.ts';
+        
+        // Execute the script and wait for output
+        const out = execSync(cmd, { cwd: botDir, encoding: 'utf8', timeout: 45000 });
+        
+        // Strip ANSI color codes from terminal output for clean Telegram text
+        const cleanOut = out.replace(/\x1B\[\d+m/g, '').replace(/\x1B\[\d+;\d+m/g, '').trim();
+        
+        return `🧹 <b>Consolidation Report</b>\n<pre>${cleanOut.slice(-3000)}</pre>`;
+    } catch (err) {
+        let errorOut = err.stdout ? err.stdout.toString() : err.message;
+        errorOut = errorOut.replace(/\x1B\[\d+m/g, ''); // strip ansi
+        return `❌ <b>Sweep Failed</b>\n<pre>${errorOut.slice(-3000)}</pre>`;
+    }
+}
+
 // ── Helpers ──────────────────────────────────────────────────
 function formatUptime(ms) {
     const s = Math.floor(ms / 1000);
@@ -640,6 +660,10 @@ async function handleCommand(text) {
         case '/heartbeat':
         case '/ping':
             return await getHeartbeat();
+
+        case '/sweep':
+        case '/consolidate':
+            return await doSweep();
 
         case '/withdraw':
             if (!arg1) return { text: '💸 <b>Withdraw from which bot?</b>', buttons: buildBotButtons('withdraw', false) };
