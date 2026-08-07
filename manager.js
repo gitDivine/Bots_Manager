@@ -223,6 +223,7 @@ function startBot(botId) {
     const logStream = fs.createWriteStream(logPath, { flags: 'a' });
 
     // Explicitly add common binary paths to ensure node/npm/sh are found under Systemd
+    const systemPath = '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin';
     const combinedEnv = { 
         ...process.env, 
         ...loadBotEnv(bot.dir),
