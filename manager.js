@@ -810,7 +810,10 @@ async function pollTelegram() {
                 if (!msg || !msg.text) continue;
 
                 // Security: only respond to authorized chat
-                if (String(msg.chat.id) !== String(TG_CHAT_ID)) continue;
+                if (String(msg.chat.id) !== String(TG_CHAT_ID)) {
+                    log.warn(`[Security] Ignored message from chat ID ${msg.chat.id} (configured TELEGRAM_CHAT_ID: ${TG_CHAT_ID})`);
+                    continue;
+                }
 
                 const text = msg.text;
                 if (!text.startsWith('/')) continue;
@@ -888,13 +891,8 @@ async function main() {
     // Initial auto-update check
     await autoUpdate();
 
-    // Flush the Telegram update queue (reset offset to latest)
-    log.info('Flushing Telegram update queue...');
-    const initialUpdates = await tgGetUpdates();
-    if (initialUpdates.length > 0) {
-        lastUpdateId = initialUpdates[initialUpdates.length - 1].update_id;
-        log.success(`Queue flushed. Starting from update #${lastUpdateId}`);
-    }
+    // Ready to start polling Telegram
+    log.info('Initializing Telegram update listener...');
 
     // Load contract addresses from bot .env files
     loadContractAddresses();
