@@ -110,7 +110,7 @@ loadState();
 // ── Telegram API ─────────────────────────────────────────────
 async function tgSend(text) {
     try {
-        await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, {
+        const res = await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -118,13 +118,20 @@ async function tgSend(text) {
                 text,
                 parse_mode: 'HTML',
             }),
+            signal: AbortSignal.timeout(8000),
         });
-    } catch { }
+        if (!res.ok) {
+            const errJson = await res.json().catch(() => ({}));
+            log.warn(`Telegram sendMessage failed (${res.status}): ${errJson.description || 'Unknown error'}`);
+        }
+    } catch (err) {
+        log.warn(`Telegram sendMessage error: ${err.message}`);
+    }
 }
 
 async function tgSendWithButtons(text, buttons) {
     try {
-        await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, {
+        const res = await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -133,8 +140,15 @@ async function tgSendWithButtons(text, buttons) {
                 parse_mode: 'HTML',
                 reply_markup: { inline_keyboard: buttons },
             }),
+            signal: AbortSignal.timeout(8000),
         });
-    } catch { }
+        if (!res.ok) {
+            const errJson = await res.json().catch(() => ({}));
+            log.warn(`Telegram sendButtons failed (${res.status}): ${errJson.description || 'Unknown error'}`);
+        }
+    } catch (err) {
+        log.warn(`Telegram sendButtons error: ${err.message}`);
+    }
 }
 
 async function tgAnswerCallback(callbackId, text) {
@@ -143,6 +157,7 @@ async function tgAnswerCallback(callbackId, text) {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ callback_query_id: callbackId, text }),
+            signal: AbortSignal.timeout(5000),
         });
     } catch { }
 }
@@ -150,11 +165,12 @@ async function tgAnswerCallback(callbackId, text) {
 async function tgGetUpdates() {
     try {
         const res = await fetch(
-            `https://api.telegram.org/bot${TG_TOKEN}/getUpdates?offset=${lastUpdateId + 1}&timeout=30&allowed_updates=["message","callback_query"]`
+            `https://api.telegram.org/bot${TG_TOKEN}/getUpdates?offset=${lastUpdateId + 1}&timeout=30&allowed_updates=["message","callback_query"]`,
+            { signal: AbortSignal.timeout(35000) }
         );
         const data = await res.json();
         return data.ok ? data.result : [];
-    } catch {
+    } catch (err) {
         return [];
     }
 }
