@@ -108,75 +108,88 @@ const log = {
     error: (...m) => console.error(`[${ts()}] ❌`, ...m),
 };
 
-// Now safe to call — log is defined
-loadState();
+const https = require('https');
+
+// Helper to execute Telegram API calls using explicit IPv4 socket
+function tgCallApi(method, params = {}, timeoutMs = 10000) {
+    return new Promise((resolve) => {
+        const body = JSON.stringify(params);
+        const options = {
+            hostname: 'api.telegram.org',
+            port: 443,
+            path: `/bot${TG_TOKEN}/${method}`,
+            method: 'POST',
+            family: 4, // Force IPv4 family at OS socket layer
+            headers: {
+                'Content-Type': 'application/json',
+                'Content-Length': Buffer.byteLength(body),
+            },
+            timeout: timeoutMs,
+        };
+
+        const req = https.request(options, (res) => {
+            let rawData = '';
+            res.on('data', chunk => rawData += chunk);
+            res.on('end', () => {
+                try {
+                    resolve(JSON.parse(rawData));
+                } catch (e) {
+                    resolve({ ok: false, description: e.message });
+                }
+            });
+        });
+
+        req.on('error', (err) => {
+            log.warn(`Telegram API connection error (${method}): ${err.message}`);
+            resolve({ ok: false, description: err.message });
+        });
+
+        req.on('timeout', () => {
+            req.destroy();
+            log.warn(`Telegram API timeout (${method}) after ${timeoutMs}ms`);
+            resolve({ ok: false, description: 'Timeout' });
+        });
+
+        req.write(body);
+        req.end();
+    });
+}
 
 // ── Telegram API ─────────────────────────────────────────────
 async function tgSend(text) {
-    try {
-        const res = await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                chat_id: TG_CHAT_ID,
-                text,
-                parse_mode: 'HTML',
-            }),
-            signal: AbortSignal.timeout(8000),
-        });
-        if (!res.ok) {
-            const errJson = await res.json().catch(() => ({}));
-            log.warn(`Telegram sendMessage failed (${res.status}): ${errJson.description || 'Unknown error'}`);
-        }
-    } catch (err) {
-        log.warn(`Telegram sendMessage error: ${err.message}`);
+    const res = await tgCallApi('sendMessage', {
+        chat_id: TG_CHAT_ID,
+        text,
+        parse_mode: 'HTML',
+    }, 10000);
+    if (!res.ok && res.description) {
+        log.warn(`Telegram sendMessage failed: ${res.description}`);
     }
 }
 
 async function tgSendWithButtons(text, buttons) {
-    try {
-        const res = await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                chat_id: TG_CHAT_ID,
-                text,
-                parse_mode: 'HTML',
-                reply_markup: { inline_keyboard: buttons },
-            }),
-            signal: AbortSignal.timeout(8000),
-        });
-        if (!res.ok) {
-            const errJson = await res.json().catch(() => ({}));
-            log.warn(`Telegram sendButtons failed (${res.status}): ${errJson.description || 'Unknown error'}`);
-        }
-    } catch (err) {
-        log.warn(`Telegram sendButtons error: ${err.message}`);
+    const res = await tgCallApi('sendMessage', {
+        chat_id: TG_CHAT_ID,
+        text,
+        parse_mode: 'HTML',
+        reply_markup: { inline_keyboard: buttons },
+    }, 10000);
+    if (!res.ok && res.description) {
+        log.warn(`Telegram sendButtons failed: ${res.description}`);
     }
 }
 
 async function tgAnswerCallback(callbackId, text) {
-    try {
-        await fetch(`https://api.telegram.org/bot${TG_TOKEN}/answerCallbackQuery`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ callback_query_id: callbackId, text }),
-            signal: AbortSignal.timeout(5000),
-        });
-    } catch { }
+    await tgCallApi('answerCallbackQuery', { callback_query_id: callbackId, text }, 5000);
 }
 
 async function tgGetUpdates() {
-    try {
-        const res = await fetch(
-            `https://api.telegram.org/bot${TG_TOKEN}/getUpdates?offset=${lastUpdateId + 1}&timeout=30&allowed_updates=["message","callback_query"]`,
-            { signal: AbortSignal.timeout(35000) }
-        );
-        const data = await res.json();
-        return data.ok ? data.result : [];
-    } catch (err) {
-        return [];
-    }
+    const res = await tgCallApi('getUpdates', {
+        offset: lastUpdateId + 1,
+        timeout: 30,
+        allowed_updates: ["message", "callback_query"],
+    }, 35000);
+    return (res && res.ok && Array.isArray(res.result)) ? res.result : [];
 }
 
 // Build inline keyboard rows for bot selection
