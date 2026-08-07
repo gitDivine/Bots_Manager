@@ -119,10 +119,10 @@ function tgCallApi(method, params = {}, timeoutMs = 10000) {
             port: 443,
             path: `/bot${TG_TOKEN}/${method}`,
             method: 'POST',
-            family: 4, // Force IPv4 family at OS socket layer
             headers: {
                 'Content-Type': 'application/json',
                 'Content-Length': Buffer.byteLength(body),
+                'User-Agent': 'Mozilla/5.0 (Node.js Telegram Bot)',
             },
             timeout: timeoutMs,
         };
@@ -223,10 +223,10 @@ function startBot(botId) {
     const logStream = fs.createWriteStream(logPath, { flags: 'a' });
 
     // Explicitly add common binary paths to ensure node/npm/sh are found under Systemd
-    const systemPath = '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin';
     const combinedEnv = { 
         ...process.env, 
         ...loadBotEnv(bot.dir),
+        CHAIN: bot.chain || 'base',
         PATH: process.env.PATH ? `${process.env.PATH}:${systemPath}` : systemPath
     };
 

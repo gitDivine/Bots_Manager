@@ -26,7 +26,7 @@ const BOTS = {
         name: '💀 Liquidation Bot (Base)',
         chain: 'base',
         dir: path.resolve(__dirname, '../aave-liquidation-bot'),
-        cmd: 'CHAIN=base npm start',
+        cmd: 'npm start',
         logFile: 'liquidation_base.log',
         contractAddress: '',
         contractABI: [
@@ -40,7 +40,7 @@ const BOTS = {
         name: '⚡ Arb Bot (Arbitrum)',
         chain: 'arbitrum',
         dir: path.resolve(__dirname, '../arb-arb-bot'),
-        cmd: 'CHAIN=arbitrum npm start',
+        cmd: 'npm start',
         logFile: 'arb_arbitrum.log',
         contractAddress: '0x1d1D09a9f891B3E0C62f5C1A3a6dC6DA7E4FE197',
         contractABI: [
@@ -54,7 +54,7 @@ const BOTS = {
         name: '💀 Liquidation Bot (Arbitrum)',
         chain: 'arbitrum',
         dir: path.resolve(__dirname, '../arb-liquidation-bot'),
-        cmd: 'CHAIN=arbitrum npm start',
+        cmd: 'npm start',
         logFile: 'liquidation_arbitrum.log',
         contractAddress: '0x17AC291006F2a239aAB98ab503F32F43d537aCdF',
         contractABI: [
