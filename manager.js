@@ -5,6 +5,10 @@
 // ============================================================
 
 require('dotenv').config();
+const dns = require('dns');
+if (dns.setDefaultResultOrder) {
+    dns.setDefaultResultOrder('ipv4first');
+}
 const { spawn, execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
@@ -12,9 +16,9 @@ const { ethers } = require('ethers');
 const { BOTS } = require('./bots.config');
 
 // ── Config ───────────────────────────────────────────────────
-const TG_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-const TG_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
-const PRIVATE_KEY = process.env.PRIVATE_KEY;
+const TG_TOKEN = (process.env.TELEGRAM_BOT_TOKEN || '').trim();
+const TG_CHAT_ID = (process.env.TELEGRAM_CHAT_ID || '').trim();
+const PRIVATE_KEY = (process.env.PRIVATE_KEY || '').trim();
 
 const CHAIN_CONFIG = {
     base: {
@@ -825,16 +829,18 @@ async function pollTelegram() {
                 const msg = update.message;
                 if (!msg || !msg.text) continue;
 
+                log.info(`[Telegram] Incoming text from chat ${msg.chat.id}: "${msg.text}"`);
+
                 // Security: only respond to authorized chat
-                if (String(msg.chat.id) !== String(TG_CHAT_ID)) {
-                    log.warn(`[Security] Ignored message from chat ID ${msg.chat.id} (configured TELEGRAM_CHAT_ID: ${TG_CHAT_ID})`);
+                if (String(msg.chat.id).trim() !== String(TG_CHAT_ID).trim()) {
+                    log.warn(`[Security] Chat ID mismatch! Received from ${msg.chat.id}, but TELEGRAM_CHAT_ID in .env is "${TG_CHAT_ID}"`);
                     continue;
                 }
 
                 const text = msg.text;
                 if (!text.startsWith('/')) continue;
 
-                log.info(`Command: ${text}`);
+                log.info(`Executing command: ${text}`);
                 const response = await handleCommand(text);
                 await sendResponse(response);
             }
